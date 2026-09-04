@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VizoCut Pro Video Editor</title>
+<style>
+:root{--bg:#090a10;--panel:#141622;--panel2:#1e2130;--line:#34384d;--p:#7c4dff;--text:#f5f5fb;--muted:#aeb2c4}*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at top,#19182b,#090a10 48%);color:var(--text);font-family:Arial,system-ui,sans-serif}button,label.btn{border:1px solid var(--line);background:#252837;color:#fff;border-radius:12px;padding:11px 13px;font:inherit;font-weight:700;cursor:pointer;touch-action:manipulation}button:hover{filter:brightness(1.12)}button.primary,label.primary{background:linear-gradient(135deg,#875cff,#6438d9);border-color:#916dff}.danger{background:#4a2027!important}.hidden{display:none!important}.app{max-width:1280px;margin:auto;min-height:100vh}.top{position:sticky;top:0;z-index:20;background:#11121aee;backdrop-filter:blur(15px);border-bottom:2px solid var(--p);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:22px;font-weight:900}.brand b{color:#a78bfa}.actions{display:flex;gap:8px;align-items:center}#file,#musicFile{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;padding:12px}.stage{min-height:430px;background:#000;border:1px solid #2d3040;border-radius:20px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.hint{text-align:center;color:var(--muted);padding:25px;z-index:4}.hint h2{color:#fff;margin:0 0 8px}
+.stage video.previewVideo{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:1}
+canvas{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;max-width:100%;max-height:100%;width:auto;height:auto;pointer-events:none;background:#000}
+.textOverlay{position:absolute;left:50%;transform:translateX(-50%);z-index:3;color:#fff;font-weight:900;text-align:center;width:92%;padding:6px 10px;text-shadow:0 2px 5px #000,0 0 10px #000;pointer-events:none;display:none}
+.textOverlay.top{top:8%}.textOverlay.center{top:50%;transform:translate(-50%,-50%)}.textOverlay.bottom{bottom:8%}
+.textOverlay.anim-fade{animation:vcFade .7s ease both}.textOverlay.anim-pop{animation:vcPop .55s cubic-bezier(.2,1.4,.4,1) both}.textOverlay.anim-left{animation:vcLeft .7s ease both}.textOverlay.anim-right{animation:vcRight .7s ease both}.textOverlay.anim-up{animation:vcUp .7s ease both}.textOverlay.anim-bounce{animation:vcBounce .8s ease both}.textOverlay.anim-wiggle{animation:vcWiggle .7s ease both}
+.textOverlay.anim-type{overflow:hidden;white-space:nowrap;border-right:3px solid #fff;animation:vcType 1.2s steps(24,end) both,vcCursor .7s step-end infinite}
+@keyframes vcType{from{width:0}to{width:92%}}@keyframes vcCursor{50%{border-color:transparent}}
+.previewModeBadge{position:absolute;right:10px;top:10px;z-index:5;background:#7c4dff;color:#fff;padding:6px 9px;border-radius:9px;font-size:12px;font-weight:800;display:none}
+@keyframes vcFade{from{opacity:0}to{opacity:1}}@keyframes vcPop{from{opacity:0;transform:translate(-50%,-50%) scale(.2)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}@keyframes vcLeft{from{opacity:0;transform:translate(-130%,-50%)}to{opacity:1;transform:translate(-50%,-50%)}}@keyframes vcRight{from{opacity:0;transform:translate(30%,-50%)}to{opacity:1;transform:translate(-50%,-50%)}}@keyframes vcUp{from{opacity:0;transform:translate(-50%,40%)}to{opacity:1;transform:translate(-50%,-50%)}}@keyframes vcBounce{0%{transform:translate(-50%,-50%) scale(.4)}55%{transform:translate(-50%,-50%) scale(1.25)}75%{transform:translate(-50%,-50%) scale(.9)}100%{transform:translate(-50%,-50%) scale(1)}}@keyframes vcWiggle{0%,100%{transform:translate(-50%,-50%) rotate(0)}25%{transform:translate(-50%,-50%) rotate(-4deg)}75%{transform:translate(-50%,-50%) rotate(4deg)}}.side{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:12px}.tools{grid-column:1/-1;display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}.tools::-webkit-scrollbar{display:none}.tools button{white-space:nowrap;flex:0 0 auto}.tools .active{background:linear-gradient(135deg,#875cff,#6438d9);border-color:#916dff}.section{display:none}.section.active{display:block}.section h3{margin:4px 0 14px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.grid button{min-height:48px}.row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}.row>*{flex:1;min-width:95px}.status{color:var(--muted);font-size:13px;line-height:1.45;margin-top:9px}input[type=text]{width:100%;padding:13px;border-radius:12px;background:#090a10;color:#fff;border:1px solid var(--line);font-size:16px}input[type=range]{width:100%;accent-color:var(--p)}label{font-size:13px;color:#d4d6e2;display:block;margin-top:8px}.value{float:right;color:#a78bfa}.mini{font-size:12px;color:var(--muted)}.timeline{grid-column:1/-1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px}.track{height:58px;background:#08090f;border-radius:12px;position:relative;overflow:hidden}.ticks{height:100%;background:repeating-linear-gradient(90deg,#201d35 0,#201d35 8%,#11111a 8.5%,#11111a 10%)}.playhead{position:absolute;top:0;bottom:0;width:3px;background:#fff;left:0;box-shadow:0 0 8px #fff}.footer{text-align:center;color:#777;padding:12px;font-size:12px}.badge{display:inline-block;background:#27203f;color:#c8b8ff;padding:4px 8px;border-radius:8px;font-size:11px;margin-left:6px}
+.clipList{display:flex;gap:7px;overflow-x:auto;padding:8px 2px;scrollbar-width:none}.clipList::-webkit-scrollbar{display:none}
+.clipItem{flex:0 0 110px;min-height:54px;background:#222536;border:1px solid var(--line);border-radius:10px;padding:7px;color:#fff;text-align:left;font-size:11px}
+.clipItem.active{border-color:#a78bfa;background:#332753}.cutRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cutRow button{min-height:52px}
+@media(max-width:1100px){.main{grid-template-columns:1fr}.stage{min-height:260px;height:38vh}.side{grid-column:1}.tools{grid-column:1}.timeline{grid-column:1}.top{padding:9px}.brand{font-size:18px}.actions button,.actions label{padding:10px 9px;font-size:13px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.row>*{min-width:0}.stage canvas{max-height:38vh}}
+@media(min-width:851px){.side{grid-column:2;grid-row:1/4}.stage{grid-column:1}.tools{grid-column:1}.timeline{grid-column:1}}
+
+/* Drag + resize controls */
+#textOverlay,#stickerOverlay{position:absolute;z-index:10;touch-action:none;user-select:none;cursor:move}
+#textOverlay.selected,#stickerOverlay.selected{outline:2px dashed #8b5cf6;outline-offset:5px}
+.resizeHandle{position:absolute;width:18px;height:18px;border-radius:50%;right:-12px;bottom:-12px;background:#8b5cf6;border:2px solid #fff;cursor:nwse-resize}
+#stickerOverlay{display:none;font-size:72px;line-height:1;transform-origin:center center}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="brand">🎬 VizoCut <b>Pro</b><span class="badge">Desktop + Mobile</span></div><div class="actions"><button id="addVideoTop" class="primary" type="button">＋ Add Video</button><input id="file" type="file" accept="video/*" multiple><button id="goExport">⬇ Export</button></div></header>
+<main class="main">
+<div class="stage" id="stage">
+<div id="hint" class="hint"><h2>🎬 Start Editing</h2>Add a video from your device</div>
+<video id="video" class="previewVideo" playsinline preload="metadata" webkit-playsinline controls></video>
+<canvas id="canvas"></canvas><div id="previewModeBadge" class="previewModeBadge">✨ Animation Preview</div>
+<div id="textOverlay" class="textOverlay center"></div>
+<div id="stickerOverlay"></div>
+</div>
+<div class="tools" id="tabs">
+<button class="active" data-t="media">➕ Video / Cut</button><button data-t="trim">✂️ Trim</button><button data-t="filter">🎨 Filter</button><button data-t="adjust">☀️ Adjust</button><button data-t="text">🔤 Text</button><button data-t="textanim">✨ Text Animation</button><button data-t="videoanim">🪄 Video Animation</button><button data-t="sticker">😊 Sticker</button><button data-t="rotate">↻ Rotate</button><button data-t="speed">⏩ Speed</button><button data-t="ratio">▣ Ratio</button><button data-t="music">🎵 Music</button><button data-t="enhance">4K Enhance</button><button data-t="export">⬇ Export</button>
+</div>
+<aside class="side">
+<section id="media" class="section active">
+<h3>➕ Video Add & ✂️ Cut</h3>
+<button id="addVideoMain" class="primary" type="button" style="text-align:center;width:100%">＋ Add Video / Add More Videos</button>
+<div class="status">একাধিক ভিডিও যোগ করতে পারবে। নিচের clip-এ tap করে video change করো।</div>
+<div id="clipList" class="clipList"><div class="status">No video added yet</div></div>
+<div class="row">
+<button id="openVideo" class="primary">▶ Open / Play Video</button>
+<button id="editorPreview">✨ Editor Preview</button>
+</div>
+<div class="cutRow">
+<button id="splitClip" class="primary">✂️ Split / Cut Here</button>
+<button id="deleteClip" class="danger">🗑 Delete Clip</button>
+</div>
+<div class="row">
+<button id="prevClip">◀ Previous</button>
+<button id="nextClip">Next ▶</button>
+</div>
+<div class="status" id="cutStatus">ভিডিও চলার সময় যেখানে আছে, সেখানে Split করলে ২টা clip হবে।</div>
+</section>
+<section id="trim" class="section"><h3>✂️ Trim & Preview</h3><div class="row"><button id="play" class="primary">▶ Play</button><button id="pause">⏸ Pause</button><button id="stop">■ Stop</button></div><label>Trim Start <span id="sl" class="value">0.0s</span></label><input id="start" type="range" value="0" min="0" max="0" step=".1"><label>Trim End <span id="el" class="value">0.0s</span></label><input id="end" type="range" value="0" min="0" max="0" step=".1"><label>Seek <span id="tl" class="value">0.0 / 0.0s</span></label><input id="seek" type="range" min="0" max="0" step=".01"></section>
+<section id="filter" class="section"><h3>🎨 Filters & Effects</h3><div class="status">Filter চাপলেই ভিডিওর উপর সঙ্গে সঙ্গে effect দেখা যাবে।</div><div class="grid" id="filters"></div></section>
+<section id="adjust" class="section"><h3>☀️ Adjust</h3><label>Brightness <span id="bv" class="value">100%</span></label><input id="bright" type="range" min="50" max="160" value="100"><label>Contrast <span id="cv" class="value">100%</span></label><input id="contrast" type="range" min="50" max="180" value="100"><label>Saturation <span id="sv" class="value">100%</span></label><input id="sat" type="range" min="0" max="200" value="100"></section>
+
+<section id="sticker" class="section">
+<h3>😎 Sticker — Add, Move & Resize</h3>
+<div class="status">Sticker select করে Preview-এর উপর drag করে position বদলাও। নিচের Size slider দিয়ে বড়/ছোট করো।</div>
+<div class="grid" id="stickers"></div>
+<label>Sticker Size: <b id="stickerSizeValue">72px</b></label>
+<input id="stickerSize" type="range" min="30" max="220" value="72">
+<button id="deleteSticker" class="danger">🗑 Delete Sticker</button>
+</section>
+
+<section id="text" class="section"><h3>🔤 Text — Move & Resize</h3><div class="status">Text Preview-এর উপর drag করে সরাও। Size slider দিয়ে বড়/ছোট করো।</div><input id="txt" type="text" placeholder="Write text"><label>Text Size <span id="tsv" class="value">60px</span></label><input id="tsize" type="range" min="20" max="220" value="60"><label>Font</label><div class="grid" id="fonts"></div><div class="row"><button data-pos="top">Top</button><button data-pos="center" class="primary">Center</button><button data-pos="bottom">Bottom</button></div><div class="row"><button data-col="#fff">White</button><button data-col="#ffd43b">Yellow</button><button data-col="#ff6b6b">Red</button><button data-col="#69db7c">Green</button></div></section>
+<section id="textanim" class="section"><h3>✨ Text Animation</h3><p class="status">CapCut-style preview animation for your text.</p><div class="grid" id="textAnims"></div><label>Animation speed <span id="tasv" class="value">1.0×</span></label><input id="textAnimSpeed" type="range" min="0.3" max="2" step="0.1" value="1"></section>
+<section id="videoanim" class="section"><h3>🪄 Smooth Video Animation</h3><p class="status">Smooth canvas animation: zoom, pan, shake, pulse and cinematic movement.</p><div class="grid" id="videoAnims"></div><label>Animation strength <span id="vasv" class="value">50%</span></label><input id="videoAnimStrength" type="range" min="0" max="100" value="50"><label>Animation speed <span id="vaspeedv" class="value">1.0×</span></label><input id="videoAnimSpeed" type="range" min="0.3" max="2" step="0.1" value="1"></section>
+<section id="rotate" class="section"><h3>↻ Rotate / Flip</h3><div class="grid"><button id="left">↶ Left</button><button id="right">↷ Right</button><button id="flip">↔ Flip</button><button id="reset">Reset</button></div></section>
+<section id="speed" class="section"><h3>⏩ Speed</h3><div class="grid" id="speeds"></div></section>
+<section id="ratio" class="section"><h3>▣ Ratio</h3><div class="grid" id="ratios"></div></section>
+<section id="music" class="section"><h3>🎵 Background Music</h3><label class="btn primary" for="musicFile">＋ Add Music</label><input id="musicFile" type="file" accept="audio/*"><div id="musicStatus" class="status">No music selected</div><div class="row"><button id="musicPlay">▶ Preview</button><button id="musicRemove">Remove</button></div><p class="mini">Music preview works in the editor. Browser-only export may not mix external audio in every WebView.</p></section>
+<section id="enhance" class="section"><h3>4K ✨ Enhance</h3><p class="status">Adds sharpness/contrast simulation to the preview. 4K is an export resolution option.</p><label>Enhance strength <span id="env" class="value">0%</span></label><input id="enhanceRange" type="range" min="0" max="100" value="0"><div class="row"><button id="enhanceAuto" class="primary">✨ Auto</button><button id="enhanceOff">Off</button></div></section>
+<section id="export" class="section"><h3>⬇ Export & Save</h3><p class="status">Choose resolution. The editor renders the edited canvas and saves a WebM video.</p><div class="grid"><button data-res="original" class="primary">Original</button><button data-res="480">480p</button><button data-res="720">720p</button><button data-res="1080">1080p</button><button data-res="1440">2K</button><button data-res="2160">4K</button></div><label>Quality / File Size</label><div class="row"><button data-quality="low">Small MB</button><button data-quality="medium">Balanced</button><button data-quality="high" class="primary">High Quality</button></div><div class="status">Original = ভিডিওর original resolution। High Quality দিলে MB বেশি হবে, Small MB দিলে file size কম হবে।</div><label>Export FPS</label><div class="row"><button data-fps="24">24 FPS</button><button data-fps="30" class="primary">30 FPS</button><button data-fps="60">60 FPS</button></div><button id="exportBtn" class="primary" style="width:100%;padding:16px;font-size:18px;margin-top:10px">⬇ Export Video & Save</button><div id="status" class="status">Ready</div></section>
+</aside>
+<div class="timeline"><div class="track"><div class="ticks"></div><div class="playhead" id="playhead"></div></div><div class="status">Timeline • Multiple Video Clips • Split / Cut • Text Animation • Smooth Video Animation • 1080p / 4K</div></div>
+</main><div class="footer">VizoCut Pro • Video Open + Font + Text Animation • Desktop + Mobile</div></div>
+<script>
+const $=id=>document.getElementById(id);const v=$('video'),c=$('canvas'),ctx=c.getContext('2d');
+
+const textOverlay=$('textOverlay');
+
+function buildVisualFilter(){
+  const parts=[];
+  if(S && S.filter && S.filter!=='none') parts.push(S.filter);
+  parts.push('brightness('+(S?S.b:100)+'%)');
+  parts.push('contrast('+(S?S.co:100)+'%)');
+  parts.push('saturate('+(S?S.sa:100)+'%)');
+  if(S && S.enhance){
+    const e=S.enhance/100;
+    parts.push('contrast('+(1+e*.18)+')');
+    parts.push('saturate('+(1+e*.12)+')');
+  }
+  return parts.join(' ');
+}
+function applyVisualPreview(){
+  if(!S) return;
+  v.style.filter=buildVisualFilter();
+  v.style.transform='scaleX('+S.flip+') rotate('+S.rot+'deg)';
+  if(c.style.display==='block') drawPreview();
+}
+function showNativePreview(){
+ c.style.display='none';
+ v.style.display='block';
+ v.controls=true;
+ $('previewModeBadge').style.display='none';
+}
+function showEditorPreview(){
+ // Editor preview must show ONLY the rendered canvas.
+ // The source video stays alive for canvas drawing but is hidden behind it.
+ v.controls=false;
+ v.style.display='none';
+ c.style.display='block';
+ $('previewModeBadge').style.display='block';
+ drawPreview();
+}
+function animationPreviewOn(){
+ if(!currentClip && currentClip!==0) return;
+ showEditorPreview();
+ $('cutStatus').textContent='✓ Animation Preview ON — এখন Play করলে effect ভিডিওতে দেখা যাবে';
+}
+function updateTextOverlay(restart=false){
+ const t=S.text||'';
+ if(!t){textOverlay.style.display='none';return}
+ textOverlay.style.display='block';
+ textOverlay.textContent=t;
+ textOverlay.className='textOverlay '+S.pos;
+ textOverlay.style.fontFamily=S.font;textOverlay.style.fontSize=(S.textSize||48)+'px';
+ textOverlay.style.fontSize=Math.max(20,Math.min(72,Number(S.size)||60))+'px';
+ textOverlay.style.color=S.color;
+ const map={'Fade In':'anim-fade','Pop':'anim-pop','Slide Left':'anim-left','Slide Right':'anim-right','Slide Up':'anim-up','Bounce':'anim-bounce','Typewriter':'anim-type','Wiggle':'anim-wiggle'};
+ if(map[S.textAnim])textOverlay.classList.add(map[S.textAnim]);
+ if(restart){
+   textOverlay.style.animation='none';
+   void textOverlay.offsetWidth;
+   textOverlay.style.animation='';
+ }
+}
+let audio=new Audio(),raf=0,sourceURL='';
+// Persistent WebAudio mixer for export. MediaElementSource can only be created once per media element.
+let exportAudioCtx=null, exportAudioDest=null, exportVideoSource=null, exportMusicSource=null;
+let clips=[],currentClip=-1;
+function shortName(n){return n.length>15?n.slice(0,15)+'…':n}
+function renderClips(){
+ const box=$('clipList'); box.innerHTML='';
+ if(!clips.length){box.innerHTML='<div class="status">No video added yet</div>';return}
+ clips.forEach((cl,i)=>{
+   const b=document.createElement('button');
+   b.className='clipItem'+(i===currentClip?' active':'');
+   b.innerHTML='<b>🎬 Clip '+(i+1)+'</b><br>'+shortName(cl.name)+'<br><span class="mini">'+cl.start.toFixed(1)+'s – '+(cl.end?cl.end.toFixed(1)+'s':'…')+'</span>';
+   b.onclick=()=>loadClip(i);
+   box.appendChild(b);
+ });
+}
+function loadClip(i){
+ if(i<0||i>=clips.length)return;
+ currentClip=i;
+ const cl=clips[i];
+
+ v.pause();
+ v.onloadedmetadata=null;
+ v.oncanplay=null;
+ v.onerror=null;
+
+ $('hint').classList.add('hidden');
+ $('cutStatus').textContent='ভিডিও লোড হচ্ছে…';
+
+ v.onloadedmetadata=()=>{
+   const d=Number(v.duration)||0;
+   if(d<=0){
+     $('cutStatus').textContent='ভিডিও metadata পাওয়া যায়নি';
+     return;
+   }
+   cl.end=cl.end||d;
+   ['start','end','seek'].forEach(id=>$(id).max=d);
+   $('start').value=cl.start;
+   $('end').value=cl.end;
+   $('seek').value=cl.start;
+   $('sl').textContent=cl.start.toFixed(1)+'s';
+   $('el').textContent=cl.end.toFixed(1)+'s';
+   v.currentTime=cl.start;
+   v.muted=false;
+   v.volume=1;
+   v.playbackRate=S.speed;
+   showNativePreview();
+   updateTextOverlay(true);
+   cancelAnimationFrame(raf);
+   loop();
+   renderClips();
+ };
+
+ v.oncanplay=()=>{
+   $('cutStatus').textContent='✓ ভিডিও Ready — ▶ Play চাপুন';
+ };
+
+ v.onerror=()=>{
+   $('cutStatus').textContent='ভিডিও load হয়নি। MP4 (H.264) format ব্যবহার করুন।';
+ };
+
+ // Important: set source only after all event handlers are ready.
+ v.removeAttribute('src');
+ v.load();
+ v.src=cl.url;
+ sourceURL=cl.url;
+ v.load();
+
+ renderClips();
+}
+function addFiles(fileList){
+ [...fileList].forEach(f=>clips.push({name:f.name,url:URL.createObjectURL(f),start:0,end:0}));
+ if(currentClip<0&&clips.length)loadClip(0);
+ else renderClips();
+}
+function saveCurrentBounds(){
+ if(currentClip>=0&&clips[currentClip]){
+   clips[currentClip].start=+$('start').value;
+   clips[currentClip].end=+$('end').value;
+ }
+ renderClips();
+}
+let S={filter:'none',b:100,co:100,sa:100,text:'',size:60,pos:'center',color:'#fff',font:'Arial',textAnim:'None',textAnimSpeed:1,st:'',rot:0,flip:1,ratio:'original',speed:1,res:'original',quality:'high',fps:30,videoAnim:'None',videoAnimStrength:50,videoAnimSpeed:1,enhance:0};
+const stickerOverlay=$('stickerOverlay');
+let activeOverlay=null;
+
+function addResizeHandle(el){
+  if(!el || el.querySelector('.resizeHandle')) return;
+  const h=document.createElement('span'); h.className='resizeHandle'; el.appendChild(h);
+  let resizing=false,startX=0,startY=0,startSize=0;
+  h.addEventListener('pointerdown',e=>{e.stopPropagation();resizing=true;startX=e.clientX;startY=e.clientY;startSize=el===textOverlay?(S.size||60):(S.stickerSize||72);h.setPointerCapture(e.pointerId)});
+  h.addEventListener('pointermove',e=>{if(!resizing)return;const delta=Math.max(e.clientX-startX,e.clientY-startY);const size=Math.max(18,Math.min(240,startSize+delta));
+    if(el===textOverlay){S.size=size;el.style.fontSize=size+'px';$('tsize').value=size;$('tsv').textContent=Math.round(size)+'px'}
+    else{S.stickerSize=size;el.style.fontSize=size+'px';$('stickerSize').value=size;$('stickerSizeValue').textContent=Math.round(size)+'px'}
+  });
+  const stop=()=>resizing=false;h.addEventListener('pointerup',stop);h.addEventListener('pointercancel',stop);
+}
+function makeDrag(el){
+ let drag=false,ox=0,oy=0;
+ el.addEventListener('pointerdown',e=>{if(e.target.classList.contains('resizeHandle'))return;drag=true;activeOverlay=el;const r=el.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;el.classList.add('selected');el.setPointerCapture(e.pointerId)});
+ el.addEventListener('pointermove',e=>{if(!drag)return;const parent=el.parentElement.getBoundingClientRect();let x=e.clientX-parent.left-ox,y=e.clientY-parent.top-oy;x=Math.max(0,Math.min(parent.width-el.offsetWidth,x));y=Math.max(0,Math.min(parent.height-el.offsetHeight,y));el.style.left=x+'px';el.style.top=y+'px';el.style.transform='none'});
+ const stop=()=>drag=false;el.addEventListener('pointerup',stop);el.addEventListener('pointercancel',stop);addResizeHandle(el);
+}
+makeDrag(textOverlay);makeDrag(stickerOverlay);
+
+function frameSize(baseW=v.videoWidth||1280,baseH=v.videoHeight||720){let w=baseW,h=baseH;if(S.ratio!=='original'){let [rw,rh]=S.ratio.split(':').map(Number),r=rw/rh;if(w/h>r)w=Math.round(h*r);else h=Math.round(w/r)}return [Math.max(2,w),Math.max(2,h)]}
+function ensureCanvas(w,h){if(c.width!==w)c.width=w;if(c.height!==h)c.height=h; c.style.aspectRatio=w+'/'+h}
+function textProgress(t){let d=Math.max(.2,1/S.textAnimSpeed);return Math.min(1,Math.max(0,t/d))}
+function videoMotion(t){let s=S.videoAnimStrength/100,k=S.videoAnimSpeed;let scale=1,dx=0,dy=0,ang=0;if(S.videoAnim==='Zoom In')scale=1+s*.18*Math.min(1,t/(Math.max(.2,v.duration||1)))*k;if(S.videoAnim==='Zoom Out')scale=1+s*.18*(1-Math.min(1,t/(Math.max(.2,v.duration||1))))*k;if(S.videoAnim==='Pan Left')dx=-s*.12*Math.sin(t*.55*k);if(S.videoAnim==='Pan Right')dx=s*.12*Math.sin(t*.55*k);if(S.videoAnim==='Pulse')scale=1+s*.08*(.5+.5*Math.sin(t*4*k));if(S.videoAnim==='Shake'){dx=s*.018*Math.sin(t*18*k);dy=s*.018*Math.cos(t*15*k);ang=s*.006*Math.sin(t*16*k)}if(S.videoAnim==='Cinematic') {scale=1+s*.1*(.5+.5*Math.sin(t*.6*k));dx=s*.05*Math.sin(t*.7*k);dy=s*.035*Math.cos(t*.5*k)}return{scale,dx,dy,ang}}
+function drawTo(targetCtx,w,h,time=v.currentTime){targetCtx.save();targetCtx.clearRect(0,0,w,h);targetCtx.fillStyle='#000';targetCtx.fillRect(0,0,w,h);if(v.readyState<2){targetCtx.restore();return}let sc=(S.ratio!=='original'?Math.max(w/v.videoWidth,h/v.videoHeight):Math.min(w/v.videoWidth,h/v.videoHeight));let m=videoMotion(time);targetCtx.translate(w/2+m.dx*w,h/2+m.dy*h);targetCtx.scale(S.flip*m.scale,m.scale);targetCtx.rotate((S.rot*Math.PI/180)+m.ang);targetCtx.filter=buildVisualFilter();targetCtx.drawImage(v,-v.videoWidth*sc/2,-v.videoHeight*sc/2,v.videoWidth*sc,v.videoHeight*sc);targetCtx.restore();if(S.st){targetCtx.save();targetCtx.font=Math.max(38,w*.13)+'px Arial';targetCtx.textAlign='center';targetCtx.textBaseline='middle';targetCtx.fillText(S.st,w/2,h*.18);targetCtx.restore()}if(S.text){let y=S.pos==='top'?h*.14:S.pos==='bottom'?h*.86:h*.5;let p=textProgress(time);let alpha=1,scale=1,tx=0,ty=0,rot=0;let total=Math.max(.4,v.duration||3);if(S.textAnim==='Fade In')alpha=p;if(S.textAnim==='Pop')scale=.2+.8*p;if(S.textAnim==='Slide Left')tx=(1-p)*-w*.5;if(S.textAnim==='Slide Right')tx=(1-p)*w*.5;if(S.textAnim==='Slide Up')ty=(1-p)*h*.3;if(S.textAnim==='Bounce')scale=1+Math.sin(Math.min(1,p)*Math.PI*3)*(1-p)*.45;if(S.textAnim==='Typewriter'){let n=Math.max(1,Math.floor(S.text.length*Math.min(1,time/(total*.55))));S._drawText=S.text.slice(0,n)}else S._drawText=S.text;if(S.textAnim==='Wiggle')rot=Math.sin(time*9*S.textAnimSpeed)*.08;targetCtx.save();targetCtx.globalAlpha=alpha;targetCtx.translate(w/2+tx,y+ty);targetCtx.scale(scale,scale);targetCtx.rotate(rot);targetCtx.fillStyle=S.color;targetCtx.strokeStyle='#000';targetCtx.lineWidth=Math.max(2,w*.004);targetCtx.font='900 '+Math.min(Number(S.size),w*.22)+'px '+S.font;targetCtx.textAlign='center';targetCtx.textBaseline='middle';targetCtx.strokeText(S._drawText,0,0);targetCtx.fillText(S._drawText,0,0);targetCtx.restore()}}
+function drawPreview(){let [w,h]=frameSize();ensureCanvas(w,h);drawTo(ctx,w,h,v.currentTime||0)}
+function loop(){if(c.style.display==='block')drawPreview();let d=v.duration||0,t=v.currentTime||0;$('seek').value=t;$('tl').textContent=t.toFixed(1)+' / '+d.toFixed(1)+'s';$('playhead').style.left=(d?Math.min(100,t/d*100):0)+'%';raf=requestAnimationFrame(loop)}
+function openVideoPicker(){
+ const inp=$('file');
+ inp.value='';
+ try{ inp.click(); }catch(err){ $('cutStatus').textContent='Video picker খুলতে পারেনি: '+err.message; }
+}
+$('addVideoTop').onclick=openVideoPicker;
+$('addVideoMain').onclick=openVideoPicker;
+$('file').addEventListener('change',e=>{
+ const files=e.target.files;
+ if(!files || !files.length){$('cutStatus').textContent='কোনো ভিডিও নির্বাচন করা হয়নি';return}
+ addFiles(files);
+ $('cutStatus').textContent='✓ '+files.length+'টি ভিডিও Add হয়েছে';
+ e.target.value='';
+});
+$('openVideo').onclick=async()=>{
+ if(currentClip<0){alert('আগে ভিডিও Add করুন');return}
+ showNativePreview();
+ try{await v.play();$('cutStatus').textContent='▶ ভিডিও Open হয়েছে এবং চলছে';}
+ catch(e){$('cutStatus').textContent='ভিডিও খুলেছে। নিচের ▶ Play চাপুন';}
+};
+$('editorPreview').onclick=()=>{showEditorPreview();$('cutStatus').textContent='✨ Editor preview mode';};
+$('play').onclick=async()=>{
+ if(currentClip<0 || !v.src){alert('আগে ভিডিও Add করুন');return}
+ let st=Number($('start').value)||0;
+ let en=Number($('end').value)||v.duration;
+
+ if(v.readyState < 2){
+   $('cutStatus').textContent='ভিডিও Ready হওয়ার অপেক্ষা করুন…';
+   try{await new Promise((resolve,reject)=>{
+     const ok=()=>{cleanup();resolve()};
+     const bad=()=>{cleanup();reject(new Error('ভিডিও load হয়নি'))};
+     const cleanup=()=>{v.removeEventListener('canplay',ok);v.removeEventListener('error',bad)};
+     v.addEventListener('canplay',ok,{once:true});
+     v.addEventListener('error',bad,{once:true});
+     setTimeout(()=>{cleanup();reject(new Error('ভিডিও load হতে দেরি হচ্ছে'))},8000);
+   });}catch(e){$('cutStatus').textContent=e.message;return}
+ }
+
+ if(!Number.isFinite(v.currentTime) || v.currentTime<st || (en>0&&v.currentTime>=en-.02)){
+   v.currentTime=st;
+ }
+
+ v.playbackRate=Number(S.speed)||1;
+ v.muted=false;
+ v.volume=1;
+
+ try{
+   showNativePreview();
+   const result=v.play();
+   if(result)await result;
+   $('cutStatus').textContent='▶ ভিডিও চলছে';
+   if(audio.src){
+     audio.currentTime=Math.max(0,v.currentTime-st);
+     audio.play().catch(()=>{});
+   }
+ }catch(err){
+   $('cutStatus').textContent='Play error: '+(err.message||err);
+ }
+};$('pause').onclick=()=>{v.pause();audio.pause()};$('stop').onclick=()=>{v.pause();audio.pause();v.currentTime=+$('start').value};v.ontimeupdate=()=>{if(v.currentTime>=+$('end').value){v.pause();audio.pause()}};$('seek').oninput=e=>v.currentTime=+e.target.value;
+$('start').oninput=e=>{$('sl').textContent=(+e.target.value).toFixed(1)+'s';saveCurrentBounds()};
+$('end').oninput=e=>{$('el').textContent=(+e.target.value).toFixed(1)+'s';saveCurrentBounds()};
+$('splitClip').onclick=()=>{
+ if(currentClip<0||!v.duration)return alert('আগে ভিডিও Add করুন');
+ let cl=clips[currentClip],cut=Math.max(cl.start+.05,Math.min(cl.end-.05,v.currentTime));
+ if(!(cut>cl.start&&cut<cl.end)){alert('ভিডিওর মাঝখানে seek করে তারপর Split করুন');return}
+ let a={name:cl.name+' (Part 1)',url:cl.url,start:cl.start,end:cut};
+ let b={name:cl.name+' (Part 2)',url:cl.url,start:cut,end:cl.end};
+ clips.splice(currentClip,1,a,b);currentClip=currentClip;loadClip(currentClip);
+ $('cutStatus').textContent='✓ Split হয়েছে — এখন '+clips.length+'টি clip আছে';
+};
+$('deleteClip').onclick=()=>{
+ if(currentClip<0)return;
+ clips.splice(currentClip,1);
+ if(!clips.length){currentClip=-1;v.removeAttribute('src');v.load();$('hint').classList.remove('hidden');cancelAnimationFrame(raf)}
+ else {currentClip=Math.min(currentClip,clips.length-1);loadClip(currentClip)}
+ $('cutStatus').textContent='✓ Clip deleted';
+ renderClips();
+};
+$('prevClip').onclick=()=>loadClip(currentClip-1);
+$('nextClip').onclick=()=>loadClip(currentClip+1);
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(z=>z.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.section').forEach(z=>z.classList.remove('active'));$(b.dataset.t).classList.add('active')});
+
+const stickerChoices=['😎','🔥','❤️','😂','✨','⭐','🎬','🎵','💥','👑','🚀','💯','😍','🎉','🌈','⚡'];
+stickerChoices.forEach(s=>{
+  const b=document.createElement('button');
+  b.textContent=s;
+  b.style.fontSize='24px';
+  b.onclick=()=>{
+    S.sticker=s; S.stickerSize=S.stickerSize||72;
+    stickerOverlay.innerHTML=s;
+    stickerOverlay.style.display='block';
+    stickerOverlay.style.fontSize=S.stickerSize+'px';
+    stickerOverlay.style.left='50%';
+    stickerOverlay.style.top='45%';
+    stickerOverlay.classList.add('selected');
+    addResizeHandle(stickerOverlay);
+    $('cutStatus').textContent='✓ Sticker added — drag করে সরাও বা resize handle/slider দিয়ে বড়-ছোট করো';
+  };
+  $('stickers').appendChild(b);
+});
+$('stickerSize').oninput=e=>{
+  S.stickerSize=+e.target.value;
+  $('stickerSizeValue').textContent=e.target.value+'px';
+  stickerOverlay.style.fontSize=e.target.value+'px';
+};
+$('deleteSticker').onclick=()=>{
+  stickerOverlay.style.display='none';
+  stickerOverlay.innerHTML='';
+  S.sticker='';
+  $('cutStatus').textContent='Sticker deleted';
+};
+
+
+const F={
+  Normal:'none',
+  'B&W':'grayscale(1)',
+  Sepia:'sepia(1)',
+  Vivid:'saturate(1.8) contrast(1.12)',
+  Warm:'sepia(.28) saturate(1.35) hue-rotate(-8deg)',
+  Cool:'saturate(1.15) hue-rotate(180deg)',
+  Vintage:'sepia(.52) contrast(.92) saturate(.78)',
+  Negative:'invert(1)',
+  Noir:'grayscale(1) contrast(1.65)',
+  Dream:'brightness(1.12) saturate(1.28) blur(.15px)',
+  Purple:'hue-rotate(245deg) saturate(1.35)',
+  Cinematic:'contrast(1.18) saturate(.82) brightness(.95)'
+};
+for(const[n,z]of Object.entries(F)){
+  let b=document.createElement('button');
+  b.textContent=n;
+  if(n==='Normal') b.classList.add('primary');
+  b.onclick=()=>{
+    S.filter=z;
+    [...$('filters').children].forEach(x=>x.classList.remove('primary'));
+    b.classList.add('primary');
+    applyVisualPreview();
+    $('cutStatus').textContent='✓ '+n+' filter applied';
+  };
+  $('filters').append(b);
+}
+[['bright','b','bv','%'],['contrast','co','cv','%'],['sat','sa','sv','%']].forEach(([id,key,out,suf])=>$(id).oninput=e=>{
+  S[key]=+e.target.value;
+  $(out).textContent=e.target.value+suf;
+  applyVisualPreview();
+  $('cutStatus').textContent='✓ Adjust applied';
+});$('txt').oninput=e=>{S.text=e.target.value;updateTextOverlay(true)};
+$('tsize').oninput=e=>{S.size=+e.target.value;$('tsv').textContent=e.target.value+'px';updateTextOverlay()};
+document.querySelectorAll('[data-pos]').forEach(b=>b.onclick=()=>{S.pos=b.dataset.pos;updateTextOverlay(true)});
+document.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>{S.color=b.dataset.col;updateTextOverlay()});
+const fonts={
+'Arial':'Arial, sans-serif','Impact':'Impact, sans-serif','Georgia':'Georgia, serif',
+'Trebuchet':'Trebuchet MS, sans-serif','Courier':'Courier New, monospace',
+'Verdana':'Verdana, sans-serif','Times':'Times New Roman, serif',
+'Comic':'Comic Sans MS, cursive','Fantasy':'fantasy','Cursive':'cursive'
+};
+for(const[n,z]of Object.entries(fonts)){
+ let b=document.createElement('button');b.textContent=n;b.style.fontFamily=z;
+ b.onclick=()=>{S.font=z;updateTextOverlay(true)};
+ $('fonts').append(b)
+}
+['None','Fade In','Pop','Slide Left','Slide Right','Slide Up','Bounce','Typewriter','Wiggle'].forEach(n=>{
+ let b=document.createElement('button');b.textContent=n;
+ b.onclick=()=>{
+   S.textAnim=n;
+   [...$('textAnims').children].forEach(x=>x.classList.remove('primary'));
+   b.classList.add('primary');
+   updateTextOverlay(true);
+   if(n!=='None') animationPreviewOn(); else showNativePreview();
+   $('cutStatus').textContent=n==='None'?'Text animation OFF':'✓ '+n+' text animation applied — Play চাপুন';
+ };
+ $('textAnims').append(b)
+});
+$('textAnimSpeed').oninput=e=>{
+ S.textAnimSpeed=+e.target.value;
+ $('tasv').textContent=e.target.value+'×';
+ updateTextOverlay(true);
+ if(S.textAnim!=='None') animationPreviewOn();
+};
+['None','Zoom In','Zoom Out','Pan Left','Pan Right','Pulse','Shake','Cinematic'].forEach(n=>{
+ let b=document.createElement('button');b.textContent=n;
+ b.onclick=()=>{
+   S.videoAnim=n;
+   [...$('videoAnims').children].forEach(x=>x.classList.remove('primary'));
+   b.classList.add('primary');
+   if(n!=='None') animationPreviewOn(); else showNativePreview();
+   $('cutStatus').textContent=n==='None'?'Video animation OFF':'✓ '+n+' animation applied — Play চাপুন';
+ };
+ $('videoAnims').append(b)
+});
+$('videoAnimStrength').oninput=e=>{
+ S.videoAnimStrength=+e.target.value;
+ $('vasv').textContent=e.target.value+'%';
+ if(S.videoAnim!=='None') animationPreviewOn();
+};
+$('videoAnimSpeed').oninput=e=>{
+ S.videoAnimSpeed=+e.target.value;
+ $('vaspeedv').textContent=e.target.value+'×';
+ if(S.videoAnim!=='None') animationPreviewOn();
+};
+$('left').onclick=()=>{S.rot-=90;applyVisualPreview()};$('right').onclick=()=>{S.rot+=90;applyVisualPreview()};$('flip').onclick=()=>{S.flip*=-1;applyVisualPreview()};$('reset').onclick=()=>{S.rot=0;S.flip=1;S.videoAnim='None';applyVisualPreview();showNativePreview();$('cutStatus').textContent='✓ Transform and animation reset'};
+[.25,.5,1,1.5,2,3,4].forEach(z=>{let b=document.createElement('button');b.textContent=z+'×';b.onclick=()=>{S.speed=z;v.playbackRate=z};$('speeds').append(b)});['original','9:16','16:9','1:1','4:5','3:4','4:3','21:9'].forEach(z=>{let b=document.createElement('button');b.textContent=z==='original'?'Original':z;b.onclick=()=>{S.ratio=z;document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('primary'));b.classList.add('primary');showEditorPreview();drawPreview();$('cutStatus').textContent='✓ Ratio '+(z==='original'?'Original':z)+' applied';};$('ratios').append(b)});
+$('musicFile').onchange=e=>{let f=e.target.files[0];if(f){audio.pause();audio.src=URL.createObjectURL(f);audio.loop=true;audio.volume=.85;$('musicStatus').textContent='✓ Music added: '+f.name+' — video play হলে musicও চলবে'}};
+$('musicPlay').onclick=()=>audio.paused?audio.play().catch(()=>{}):audio.pause();
+$('musicRemove').onclick=()=>{audio.pause();audio.removeAttribute('src');audio.currentTime=0;$('musicStatus').textContent='No music selected'};
+function syncMusic(force=false){if(!audio.src)return;const st=Number($('start').value)||0;const wanted=Math.max(0,(v.currentTime||0)-st);if(force||Math.abs((audio.currentTime||0)-wanted)>.45){try{audio.currentTime=wanted%(audio.duration||Infinity)}catch(e){}}if(!v.paused)audio.play().catch(()=>{})}
+v.addEventListener('play',()=>syncMusic(true));v.addEventListener('pause',()=>audio.pause());v.addEventListener('seeking',()=>syncMusic(true));v.addEventListener('seeked',()=>syncMusic(true));v.addEventListener('timeupdate',()=>{if(!v.paused)syncMusic(false)});v.addEventListener('ended',()=>audio.pause());
+$('enhanceRange').oninput=e=>{S.enhance=+e.target.value;$('env').textContent=e.target.value+'%';applyVisualPreview()};$('enhanceAuto').onclick=()=>{$('enhanceRange').value=70;$('enhanceRange').dispatchEvent(new Event('input'))};$('enhanceOff').onclick=()=>{$('enhanceRange').value=0;$('enhanceRange').dispatchEvent(new Event('input'))};
+document.querySelectorAll('[data-res]').forEach(b=>b.onclick=()=>{S.res=b.dataset.res==='original'?'original':+b.dataset.res;document.querySelectorAll('[data-res]').forEach(z=>z.classList.remove('primary'));b.classList.add('primary')});document.querySelectorAll('[data-quality]').forEach(b=>b.onclick=()=>{S.quality=b.dataset.quality;document.querySelectorAll('[data-quality]').forEach(z=>z.classList.remove('primary'));b.classList.add('primary')});document.querySelectorAll('[data-fps]').forEach(b=>b.onclick=()=>{S.fps=+b.dataset.fps;document.querySelectorAll('[data-fps]').forEach(z=>z.classList.remove('primary'));b.classList.add('primary')});
+function exportCanvasSize(){
+  // Export must use the EXACT ratio selected in the Ratio tool.
+  if(S.res==='original'){
+    let [bw,bh]=frameSize();
+    return [Math.max(2,Math.round(bw/2)*2),Math.max(2,Math.round(bh/2)*2)];
+  }
+  const shortSide=Math.max(2,Number(S.res)||1080);
+  if(S.ratio==='original'){
+    const vw=v.videoWidth||1280,vh=v.videoHeight||720;
+    const scale=shortSide/Math.min(vw,vh);
+    return [Math.max(2,Math.round(vw*scale/2)*2),Math.max(2,Math.round(vh*scale/2)*2)];
+  }
+  const parts=S.ratio.split(':').map(Number);
+  const rw=parts[0],rh=parts[1];
+  // The selected resolution is the SHORT side, giving standard sizes:
+  // 9:16 + 1080p = 1080x1920, 16:9 + 1080p = 1920x1080.
+  let w,h;
+  if(rw<rh){w=shortSide;h=Math.round(shortSide*rh/rw)}
+  else if(rw>rh){h=shortSide;w=Math.round(shortSide*rw/rh)}
+  else {w=shortSide;h=shortSide}
+  return [Math.max(2,Math.round(w/2)*2),Math.max(2,Math.round(h/2)*2)];
+}
+function exportBitrate(w,h){
+  // MediaRecorder bitrate must scale with resolution AND frame rate.
+  // The old pixels-only formula produced very low bitrates (especially at 1080p/4K).
+  const pixels=w*h, fps=Math.max(24,Number(S.fps)||30);
+  const base=S.quality==='low'?0.16:S.quality==='medium'?0.32:0.60;
+  const rate=Math.round(pixels*fps*base);
+  const min=S.quality==='low'?3000000:S.quality==='medium'?7000000:12000000;
+  const max=S.quality==='low'?18000000:S.quality==='medium'?40000000:80000000;
+  return Math.max(min,Math.min(max,rate));
+}
+function exportAudioBitrate(){return S.quality==='low'?128000:S.quality==='medium'?192000:320000}
+async function waitSeek(t){return new Promise((resolve,reject)=>{let done=false;let timer=setTimeout(()=>{if(!done){done=true;resolve()}},2500);const ok=()=>{if(!done){done=true;clearTimeout(timer);resolve()}};v.addEventListener('seeked',ok,{once:true});v.currentTime=Math.min(t,Math.max(0,(v.duration||t)-.001))})}
+async function exportVideo(){
+  if(!v.src){alert('আগে একটি ভিডিও Add করুন');return}
+  if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){
+    $('status').textContent='এই browser/WebView-তে video export support নেই। Chrome ব্যবহার করুন।';return;
+  }
+  let [w,h]=exportCanvasSize();
+  if(w*h>17000000){$('status').textContent='এই resolution ডিভাইসের জন্য বেশি বড় হতে পারে। 1080p চেষ্টা করুন।';return}
+  $('status').textContent='Preparing export...';
+  const off=document.createElement('canvas'); off.width=w; off.height=h;
+  const ox=off.getContext('2d');
+  const stream=off.captureStream(Math.max(1,Number(S.fps)||30));
+
+  // AUDIO MIXER: Canvas captureStream() contains VIDEO only.
+  // Mix BOTH original video audio and selected background music into one export track.
+  let audioAdded=false;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(AC){
+      if(!exportAudioCtx){
+        exportAudioCtx=new AC();
+        exportAudioDest=exportAudioCtx.createMediaStreamDestination();
+        exportVideoSource=exportAudioCtx.createMediaElementSource(v);
+        exportVideoSource.connect(exportAudioDest);
+        exportMusicSource=exportAudioCtx.createMediaElementSource(audio);
+        exportMusicSource.connect(exportAudioDest);
+      }
+      if(exportAudioCtx.state==='suspended') await exportAudioCtx.resume();
+      exportAudioDest.stream.getAudioTracks().forEach(track=>{
+        stream.addTrack(track);
+        audioAdded=true;
+      });
+    }
+  }catch(e){
+    console.warn('Audio mixer unavailable',e);
+  }
+
+  if(!audioAdded){
+    $('status').textContent='Warning: এই browser audio mixer support করছে না। Chrome ব্যবহার করুন।';
+  }
+  const candidates=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  const mime=candidates.find(x=>MediaRecorder.isTypeSupported(x))||'';
+  let chunks=[],rec;
+  const bitrate=exportBitrate(w,h);
+  const audioBitrate=exportAudioBitrate();
+  try{
+    const opt={videoBitsPerSecond:bitrate,audioBitsPerSecond:audioBitrate};
+    if(mime)opt.mimeType=mime;
+    rec=new MediaRecorder(stream,opt);
+  }catch(e){$('status').textContent='Recorder start হয়নি: '+e.message;return}
+  let finished=false;
+  rec.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data)};
+  rec.onerror=e=>{$('status').textContent='Export error: '+(e.error?.message||'Recorder error')};
+  rec.onstop=()=>{
+    if(finished)return; finished=true;
+    if(!chunks.length){$('status').textContent='কোনো video data তৈরি হয়নি। ছোট clip বা 720p চেষ্টা করুন।';return}
+    const blob=new Blob(chunks,{type:mime||'video/webm'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='VizoCut-'+(S.res==='original'?'Original':(S.res===1440?'2K':S.res===2160?'4K':S.res+'p'))+'-'+S.quality+'.webm';
+    a.style.display='none'; document.body.appendChild(a); a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},60000);
+    $('status').textContent='✓ Export complete — Downloads folder দেখুন';
+  };
+  let st=Number($('start').value)||0, en=Number($('end').value)||Number(v.duration)||0;
+  if(!(en>st)) en=Number(v.duration)||st+1;
+  v.pause();
+  await waitSeek(st);
+  let stopped=false;
+  const stopRecorder=()=>{if(stopped)return;stopped=true;v.pause();try{audio.pause()}catch(e){};try{if(rec.state!=='inactive')rec.stop()}catch(e){}};
+  rec.start(250);
+  const render=()=>{
+    if(stopped)return;
+    drawTo(ox,w,h,v.currentTime||st);
+    const progress=Math.min(99,Math.max(0,Math.round(((v.currentTime-st)/(en-st))*100)));
+    $('status').textContent='Exporting '+progress+'% • '+w+'×'+h+' • '+S.fps+' FPS • '+S.quality+' quality • '+Math.round(bitrate/1000000)+' Mbps'+(audioAdded?' • Audio ON':' • Audio unavailable');
+    if(v.currentTime>=en-.03||v.ended){drawTo(ox,w,h,en);stopRecorder();return}
+    requestAnimationFrame(render);
+  };
+  v.currentTime=st;
+  v.playbackRate=Math.max(.25,Number(S.speed)||1);
+  // Start background music from the beginning and loop it during export.
+  if(audio.src){
+    try{audio.pause();audio.currentTime=0;audio.loop=true;await audio.play()}catch(e){console.warn('Music play failed',e)}
+  }
+  try{await v.play();requestAnimationFrame(render)}catch(e){stopRecorder();$('status').textContent='ভিডিও play হয়নি: '+e.message;return}
+  const maxTime=Math.max(30000,((en-st)/(Number(S.speed)||1))*4000+15000);
+  setTimeout(()=>{if(!stopped){stopRecorder();$('status').textContent='Export timeout — ছোট clip বা 720p চেষ্টা করুন।'}},maxTime);
+}
+$('exportBtn').onclick=exportVideo;$('goExport').onclick=()=>document.querySelector('[data-t="export"]').click();
+</script></body></html>
